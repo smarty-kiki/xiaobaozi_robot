@@ -3,7 +3,7 @@ import sys
 import os
 import time
 import signal
-from pixels import Pixels
+from pixels.pixels import Pixels
 
 interrupted = False
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
