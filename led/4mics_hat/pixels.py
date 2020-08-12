@@ -12,6 +12,9 @@ except ImportError:
 
 class Pixels:
     PIXELS_N = 12
+    LOW_MULTIPLE = 1
+    MIDDLE_MULTIPLE = 10
+    HIGH_MULTIPLE = 50
 
     def __init__(self):
 
@@ -38,6 +41,8 @@ class Pixels:
         self.basis[11 * 4 + 3] = 1
         self.basis[11 * 4 + 1] = 3
 
+	self.multiple = 1
+
         self.colors = self.basis
         self.dev = apa102.APA102(num_led=self.PIXELS_N)
 
@@ -50,12 +55,9 @@ class Pixels:
         self.thread.daemon = True
         self.thread.start()
 
-    def wakeup(self, direction=0):
-        def f():
-            self._wakeup(direction)
-
+    def wait(self):
         self.next.set()
-        self.queue.put(f)
+        self.queue.put(self._wait)
 
     def listen(self):
         self.next.set()
@@ -73,27 +75,24 @@ class Pixels:
         self.next.set()
         self.queue.put(self._off)
 
-    def _wakeup(self, direction=0):
-        position = int((direction + 15) / 30) % self.PIXELS_N
+    def _wait(self):
 
-        basis = numpy.roll(self.basis, position * 4)
-        for i in range(1, 25):
-            colors = basis * i
-            self.write(colors)
-            time.sleep(0.005)
+	colors = self.colors
+        step = 0.5
 
-        colors =  numpy.roll(colors, 4)
-        self.write(colors)
-        time.sleep(0.1)
+        self.next.clear()
+        while not self.next.is_set():
 
-        for i in range(2):
-            new_colors = numpy.roll(colors, 4)
-            self.write(new_colors * 0.5 + colors)
-            colors = new_colors
+	    self.write(self.colors * self.multiple)
+
+            if self.multiple >= self.MIDDLE_MULTIPLE:
+                step = -0.5
+            elif self.multiple <= self.LOW_MULTIPLE:
+                step = 0.5
+
+	    self.colors = numpy.roll(self.colors, 4)
+            self.multiple += step
             time.sleep(0.1)
-
-        self.write(colors)
-        self.colors = colors
 
     def _listen(self):
         colors = self.colors
@@ -162,16 +161,8 @@ if __name__ == '__main__':
     while True:
 
         try:
-            pixels.wakeup()
-            time.sleep(3)
-            pixels.listen()
-            time.sleep(3)
-            pixels.think()
-            time.sleep(3)
-            pixels.speak()
-            time.sleep(6)
-            pixels.off()
-            time.sleep(3)
+            pixels.wait()
+            time.sleep(20)
         except KeyboardInterrupt:
             break
 
