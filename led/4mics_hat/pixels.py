@@ -59,6 +59,10 @@ class Pixels:
         self.next.set()
         self.queue.put(self._wait)
 
+    def wakeup(self):
+        self.next.set()
+        self.queue.put(self._wakeup)
+
     def listen(self):
         self.next.set()
         self.queue.put(self._listen)
@@ -77,7 +81,6 @@ class Pixels:
 
     def _wait(self):
 
-	colors = self.colors
         step = 0.5
 
         self.next.clear()
@@ -90,15 +93,40 @@ class Pixels:
             elif self.multiple <= self.LOW_MULTIPLE:
                 step = 0.5
 
-	    self.colors = numpy.roll(self.colors, 4)
+	    #self.colors = numpy.roll(self.colors, 4)
             self.multiple += step
             time.sleep(0.1)
 
+    def _wakeup(self):
+
+        self.next.clear()
+        while self.multiple < self.HIGH_MULTIPLE
+	    self.multiple += 1
+            self.write(self.colors * self.multiple)
+	    time.sleep(0.05)
+
+        while self.multiple > self.MIDDLE_MULTIPLE
+	    self.multiple -= 1
+            self.write(self.colors * self.multiple)
+	    time.sleep(0.05)
+
     def _listen(self):
-        colors = self.colors
-        for i in range(1, 25):
-            self.write(colors * i / 24)
-            time.sleep(0.2)
+
+        step = 0.5
+
+        self.next.clear()
+        while not self.next.is_set():
+
+	    self.write(self.colors * self.multiple)
+
+            if self.multiple >= self.HIGH_MULTIPLE:
+                step = -0.5
+            elif self.multiple <= self.MIDDLE_MULTIPLE:
+                step = 0.5
+
+	    #self.colors = numpy.roll(self.colors, 4)
+            self.multiple += step
+            time.sleep(0.1)
 
     def _think(self):
         colors = self.colors
