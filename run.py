@@ -3,17 +3,17 @@ import sys
 import os
 import time
 import signal
-from pixels.pixels import Pixels
+#from pixels.pixels import Pixels
 
 interrupted = False
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 model = os.path.join(ROOT_DIR, "resources/xiaobaozi.umdl")
-pixel = Pixels()
+#pixel = Pixels()
 
 def signal_handler(signal, frame):
     global interrupted
     interrupted = True
-    pixel.off()
+    #pixel.off()
 
 def interrupt_callback():
     global interrupted
@@ -21,12 +21,17 @@ def interrupt_callback():
 
 def detected_callback_func():
     interrupted = True
-    pixel.think()
+    #pixel.wakeup()
+    print('wakeup')
     snowboydecoder.play_audio_file()
-    time.sleep(5)
-    pixel.speak()
-    time.sleep(5)
-    pixel.listen()
+    print('listen')
+    #time.sleep(5)
+    #pixel.listen()
+    #time.sleep(5)
+    ##pixel.request()
+    print('request')
+    print('response')
+    print('speak')
     interrupted = False
     
 
@@ -34,7 +39,8 @@ def detected_callback_func():
 signal.signal(signal.SIGINT, signal_handler)
 
 detector = snowboydecoder.HotwordDetector(model, sensitivity=0.4)
-pixel.listen()
+#pixel.wait()
+print('wait')
 
 # main loop
 detector.start(detected_callback=detected_callback_func,
