@@ -1,4 +1,4 @@
-import snowboydetect
+from snowboy import snowboydetect
 import pyaudio
 import os
 import sys
