@@ -12,9 +12,10 @@ except ImportError:
 
 class Pixels:
     PIXELS_N = 12
-    LOW_MULTIPLE = 1
-    MIDDLE_MULTIPLE = 10
-    HIGH_MULTIPLE = 50
+    LOW_MULTIPLE = 5
+    MIDDLE_MULTIPLE = 15
+    HIGH_MULTIPLE = 35
+    HIGHLIGHT_MULTIPLE = 50
 
     def __init__(self):
 
@@ -86,33 +87,34 @@ class Pixels:
         self.next.clear()
         while not self.next.is_set():
 
-	    self.write(self.colors * self.multiple)
+            self.write(self.colors * self.multiple)
 
             if self.multiple >= self.MIDDLE_MULTIPLE:
                 step = -0.5
             elif self.multiple <= self.LOW_MULTIPLE:
                 step = 0.5
 
-	    #self.colors = numpy.roll(self.colors, 4)
             self.multiple += step
             time.sleep(0.1)
 
     def _wakeup(self):
 
         self.next.clear()
-        while self.multiple < self.HIGH_MULTIPLE
-	    self.multiple += 1
+        while self.multiple < self.HIGHLIGHT_MULTIPLE:
+	    self.multiple += 5
             self.write(self.colors * self.multiple)
-	    time.sleep(0.05)
+	    time.sleep(0.02)
 
-        while self.multiple > self.MIDDLE_MULTIPLE
-	    self.multiple -= 1
+        while self.multiple > self.MIDDLE_MULTIPLE:
+	    self.multiple -= 5
             self.write(self.colors * self.multiple)
-	    time.sleep(0.05)
+	    time.sleep(0.01)
 
     def _listen(self):
 
         step = 0.5
+        count = (self.HIGH_MULTIPLE - self.MIDDLE_MULTIPLE) / step
+        step_time = 1 / count
 
         self.next.clear()
         while not self.next.is_set():
@@ -124,27 +126,26 @@ class Pixels:
             elif self.multiple <= self.MIDDLE_MULTIPLE:
                 step = 0.5
 
-	    #self.colors = numpy.roll(self.colors, 4)
             self.multiple += step
-            time.sleep(0.1)
+            time.sleep(step_time)
 
     def _think(self):
-        colors = self.colors
 
         self.next.clear()
-        while not self.next.is_set():
-            colors = numpy.roll(colors, 4)
-            self.write(colors)
-            time.sleep(0.2)
 
-        t = 0.1
-        for i in range(0, 5):
-            colors = numpy.roll(colors, 4)
-            self.write(colors * (4 - i) / 4)
+        t = 0.02
+        while self.multiple != self.MIDDLE_MULTIPLE:
+            if self.multiple > self.MIDDLE_MULTIPLE:
+                self.multiple -= 0.5
+            else:
+                self.multiple += 0.5
+            self.write(self.colors * self.multiple)
             time.sleep(t)
-            t /= 2
 
-        self.colors = colors
+        while not self.next.is_set():
+            self.colors = numpy.roll(self.colors, 4)
+            self.write(self.colors * self.multiple)
+            time.sleep(0.5)
 
     def _speak(self):
         colors = self.colors
@@ -189,8 +190,18 @@ if __name__ == '__main__':
     while True:
 
         try:
-            pixels.wait()
-            time.sleep(20)
+            #print('wait')
+            #pixels.wait()
+            #time.sleep(5)
+            print('wakeup')
+            pixels.wakeup()
+            time.sleep(2)
+            print('listen')
+            pixels.listen()
+            time.sleep(5)
+            print('think')
+            pixels.think()
+            time.sleep(5)
         except KeyboardInterrupt:
             break
 
